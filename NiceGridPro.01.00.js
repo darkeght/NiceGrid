@@ -28,11 +28,12 @@ var globalPropertyTagsFoot = new Array;
 	globalPropertyTagsFoot[globalPropertyTagsFoot.length] = "Footstyle";
 	
 var globalSplit = "⁞";
+var filterDb = new Array;
 //Inicia a criaçaõ do Grid
 //gridID = id do elemento grid HTML
 //startIndex = indice da array que irá iniciar 
 //listName = nome da lista de valores
-function CreateNiceGrid(gridID,startIndex,listName){
+function createNiceGrid(gridID,startIndex,listName){
 	//start functions
 	setCookie(startIndex,1);
 	
@@ -48,7 +49,25 @@ function CreateNiceGrid(gridID,startIndex,listName){
 	
 	niceGridPro  = createHeaderNiceGrid(niceElement);
 	niceGridPro += createFieldDataNiceGrid(niceElement,startIndex,rowview,window[listName]);
-	niceGridPro += createFootNiceGrid(niceElement,gridID,startIndex,listName);
+	niceGridPro += createFootNiceGrid(niceElement,gridID,startIndex,listName,"createNiceGrid");
+	niceGridPro  = createTableNiceGrid(niceElement,niceGridPro);
+
+	niceElement.innerHTML = niceGridPro;
+}
+function createFilterNiceGrid(gridID,startIndex,listName){
+    //Roll's
+	addGridRollBack(gridID);
+	addTemplateGrid(gridID);
+	
+	gridRollBack(gridID);
+	
+	var niceGridPro = "";
+	var niceElement = document.gBI(gridID);
+	var rowview = gRA(niceElement,"RowView","10");
+	
+	niceGridPro  = createHeaderNiceGrid(niceElement);
+	niceGridPro += createFieldDataNiceGrid(niceElement,startIndex,rowview,window[listName]);
+	niceGridPro += createFootNiceGrid(niceElement,gridID,startIndex,listName,"createFilterNiceGrid");
 	niceGridPro  = createTableNiceGrid(niceElement,niceGridPro);
 
 	niceElement.innerHTML = niceGridPro;
@@ -188,8 +207,6 @@ function createFieldDataNiceGrid(niceElement,index,rowview,collection){
                     }break;
 					default:{hdindex++;}break;
                 }
-
-
             }
 		}
 		retorno += "<tr "+ replaceFiledNameForValues(stringPropertyMasterRow,db[index]) +" >"+StringTdCollection+"</tr>";
@@ -220,21 +237,25 @@ function createTemplateField(stringFormat,attributes,coll){
 	return retorno;
 }
 //Footer
-function createFootNiceGrid(niceElement,gridID,startIndex,listName){
+function createFootNiceGrid(niceElement,gridID,startIndex,listName,callFunction){
 	var retorno = "<tfoot {0} ><td {1} >{2} {3} {4}</td></tfoot>";
+	var rowView = Number(gRA(niceElement,"RowView","10"));
 	var completCallGrid = "";
-	var callGridTemplate = "CreateNiceGrid(\"{0}\",{1},\"{2}\")";
-	var leftRow = "<a class='pagesselector' onclick='{0}' >◄</a><a class='pagesselector' onclick='{1}' ></a>";
-	var rightRow = "<a class='pagesselector' onclick='{1}' ></a><a id='page_next'  class='pagesselector' onclick='{0}' >►</a>";
+	var callGridTemplate = callFunction +"(\"{0}\",{1},\"{2}\")";
+	var leftRow = "<a class='pagesselector icon-to-start-alt' onclick='{1}' ></a><a class='pagesselector' onclick='{0}' >◄</a>";
+	var rightRow = "<a id='page_next'  class='pagesselector' onclick='{0}' >►</a><a class='pagesselector icon-to-end-alt' onclick='{1}' ></a>";
 	var indicator = "{0} - {1}";
 	var colspan = "colspan='{0}'";
-	var next = startIndex + Number(gRA(niceElement,"RowView","10")); 
-	var back = startIndex - Number(gRA(niceElement,"RowView","10"));
-	var pageIndex = Math.round(gridCookieIndex() / Number(gRA(niceElement,"RowView","10")));
+	var next = startIndex + rowView; 
+	var back = startIndex - rowView;
+	var lastPage = window[listName].length - rowView;
+	var pageIndex = Math.round(gridCookieIndex() / rowView);
 	
-		next = (next + 1) > window[listName].length? (window[listName].length - 1) : next;
+		
 		back = back < 0? 0 : back;
 	    colspan = rep(colspan,"{0}", gBT(niceElement,"header").length);
+		lastPage = lastPage < 0? 0 : lastPage;
+		next = (next + 1) > window[listName].length? lastPage : next;
 		
 	    completCallGrid = rep(callGridTemplate,"{0}",gridID);
         completCallGrid = rep(completCallGrid,"{1}",back);
@@ -243,11 +264,24 @@ function createFootNiceGrid(niceElement,gridID,startIndex,listName){
 		leftRow = rep(leftRow,"{0}",completCallGrid);
 		
 		completCallGrid = rep(callGridTemplate,"{0}",gridID);
+        completCallGrid = rep(completCallGrid,"{1}",'0');
+		completCallGrid = rep(completCallGrid,"{2}",listName);
+		
+		leftRow = rep(leftRow,"{1}",completCallGrid);
+		
+		completCallGrid = rep(callGridTemplate,"{0}",gridID);
         completCallGrid = rep(completCallGrid,"{1}",next);
 		completCallGrid = rep(completCallGrid,"{2}",listName);
 		
 		rightRow = rep(rightRow,"{0}",completCallGrid);
-		indicator = pageIndex +" - "+Math.round(window[listName].length / Number(gRA(niceElement,"RowView","10")));
+		
+		completCallGrid = rep(callGridTemplate,"{0}",gridID);
+        completCallGrid = rep(completCallGrid,"{1}",lastPage);
+		completCallGrid = rep(completCallGrid,"{2}",listName);
+		
+		rightRow = rep(rightRow,"{1}",completCallGrid);
+
+		indicator = (pageIndex + 1) +" - "+Math.round(window[listName].length / rowView);
 		
 		retorno = rep(retorno,"{1}",colspan);
 		retorno = rep(retorno,"{2}",leftRow);
@@ -256,6 +290,50 @@ function createFootNiceGrid(niceElement,gridID,startIndex,listName){
 
 	return retorno;
 }
+//filter 
+function filterGrid(gridID,listName,coll,ObjectValue,type) {
+
+    if (this.filterDb[addFilterGrid(gridID,listName)].length <= 0) {
+        this.filterDb[addFilterGrid(gridID,listName)] = new Array(window[listName])[0];
+    } else {
+        window[listName] = new Array(this.filterDb[addFilterGrid(gridID,listName)][1])[0];
+    }
+    
+    switch (type){
+        //se contem informaçao
+        case 1:{window[listName] = window[listName].filter(function(object){return object[coll].split('⁞')[1].toString().toUpperCase().indexOf(ObjectValue.toString().toUpperCase()) >= 0;});}break;
+        //igual a informação
+        case 2:{window[listName] = window[listName].filter(function(object){return object[coll].split('⁞')[1].toString().toUpperCase() === ObjectValue.toString().toUpperCase();});}break;
+        //retorna todos novamente
+        case 3:{window[listName] = window[listName].filter(function(object){return true;});}break;
+		//maior que e menor que somente numericos
+		case 4:{window[listName] = window[listName].filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) > Number(filcontent[0]) && Number(object[coll].split('⁞')[1]) < Number(filcontent[1]);});}break;
+		//maior e igual e menor e igual que, somente numeros
+		case 5:{window[listName] = window[listName].filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]) && Number(object[coll].split('⁞')[1]) <= Number(filcontent[1]);});}break;
+		//maior igual que
+		case 6:{window[listName] = window[listName].filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]);});}break;
+		
+    }
+    
+    createFilterNiceGrid(gridID, 0, listName);
+}
+//chamada de template 
+function callTemplateRow(gridID,templateID,listName,object) {
+	
+	createNiceGrid(gridID, gridCookieIndex(), listName);
+	
+    var countHeaders = document.gBI('NiceGrid').gBT('table')[0].gBT('th').length;
+    var doc = document.gBI(gridID);
+    var table = doc.gBT('tbody');
+	var dbIndex = Math.round(gridCookieIndex() / object.parentNode.parentNode.rowIndex);
+
+    var newRow = table[0].insertRow((object.parentNode.parentNode.rowIndex));
+    var newCell = newRow.insertCell(0);
+	    
+        newCell.innerHTML = replaceFiledNameForValues(htmlRollBack(templateID), window[listName][dbIndex]);
+        newCell.colSpan = countHeaders;
+}
+
 //precisa de um funcção especifica para criar relatorios
 
 //funções especificas
@@ -366,16 +444,27 @@ function htmlRollBack(gridID){
 }
 function addTemplateGrid(gridID){
 	var TempTagId = "";	
-	for(var x = 0; x < globalTempTextHTML.length;x++){
-		if(globalTempTextHTML[x][0] === gridID){
-			return false;
-		}		
-	}	
 	var GridDocHTML = document.gBI(gridID).gBT("template");
+	
 	for (x = 0; x < GridDocHTML.length; x++) {
-		TempTagId = gRA(GridDocHTML[x],id,"");
-		globalTempTextHTML[globalTempTextHTML.length] = [TempTagId,GridDocHTML[x].innerHTML];
+		TempTagId = gRA(GridDocHTML[x],"id","");
+		for(var x = 0; x < globalTempTextHTML.length;x++){
+			if(globalTempTextHTML[x][0] !== TempTagId){
+				globalTempTextHTML[globalTempTextHTML.length] = [TempTagId,GridDocHTML[x].innerHTML];
+			}		
+		}
 	}	
+}
+function addFilterGrid(gridId,listName){
+    for(var x = 0; x < filterDb.length;x++){
+        if(filterDb[x][0] === gridId){
+            return x;
+        }
+    }
+    
+    filterDb[filterDb.length] = [gridId, window[listName]];
+    
+    return (filterDb.length - 1);
 }
 //funcções nativas customizadas 
 function gRA(element, attribute, defaultValue) {
@@ -426,4 +515,8 @@ function gridCookieIndex() {
 		if (c.indexOf(name) == 0) 
 			return Number(c.substring(name.length, c.length));
 	}return Number("0");
+}
+
+function testeObject(object){
+	var tempObjectForText = object;
 }
