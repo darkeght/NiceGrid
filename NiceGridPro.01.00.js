@@ -185,31 +185,31 @@ function createFieldDataNiceGrid(niceElement,index,rowview,collection){
 		var collectioLength = collHeaders.length;
 		
 		while (hdindex < collectioLength) {
-			if (db[index][0] !== "") {
+			if (collection[index][0] !== "") {
                 var typeField = gRA(collHeaders[hdindex], "type", "normal");
 
                 switch (typeField) {
                     case "normal":{
 						var fieldname = gRA(collHeaders[hdindex], "fieldname", "");
-							StringTdCollection += createNormalField(fieldname,getAllsProperty(collHeaders[hdindex]),db[index]);
+							StringTdCollection += createNormalField(fieldname,getAllsProperty(collHeaders[hdindex]),collection[index]);
 							hdindex++;
                         }break;
                     case "template": {
                         var strTemplate = collHeaders[hdindex].innerHTML;
-                            StringTdCollection += createTemplateField(strTemplate,getAllsProperty(collHeaders[hdindex]),db[index]);
+                            StringTdCollection += createTemplateField(strTemplate,getAllsProperty(collHeaders[hdindex]),collection[index]);
                             hdindex++;
                     }break;
                     case "expressao":{
                         var StrExp = gRA(collHeaders[hdindex], "exp", "").toString().split(',');
                         var strTemplate = collHeaders[hdindex].innerHTML;
-							StringTdCollection += createExpField(strTemplate,getAllsProperty(collHeaders[hdindex]),db[index],StrExp);
+							StringTdCollection += createExpField(strTemplate,getAllsProperty(collHeaders[hdindex]),collection[index],StrExp);
 							hdindex++;
                     }break;
 					default:{hdindex++;}break;
                 }
             }
 		}
-		retorno += "<tr "+ replaceFiledNameForValues(stringPropertyMasterRow,db[index]) +" >"+StringTdCollection+"</tr>";
+		retorno += "<tr "+ replaceFiledNameForValues(stringPropertyMasterRow,collection[index]) +" >"+StringTdCollection+"</tr>";
 		index++;
 	}
 	
@@ -312,10 +312,28 @@ function filterGrid(gridID,listName,coll,ObjectValue,type) {
 		case 5:{window[listName] = window[listName].filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]) && Number(object[coll].split('⁞')[1]) <= Number(filcontent[1]);});}break;
 		//maior igual que
 		case 6:{window[listName] = window[listName].filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]);});}break;
-		
     }
     
     createFilterNiceGrid(gridID, 0, listName);
+}
+function filArr(dbColl,coll,ObjectValue,type) {
+    switch (type){
+        //se contem informaçao
+        case 1:{dbColl = dbColl.filter(function(object){return object[coll].split('⁞')[1].toString().toUpperCase().indexOf(ObjectValue.toString().toUpperCase()) >= 0;});}break;
+        //igual a informação
+        case 2:{dbColl = dbColl.filter(function(object){return object[coll].split('⁞')[1].toString().toUpperCase() === ObjectValue.toString().toUpperCase();});}break;
+        //retorna todos novamente
+        case 3:{dbColl = dbColl.filter(function(object){return true;});}break;
+		//maior que e menor que somente numericos
+		case 4:{dbColl = dbColl.filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) > Number(filcontent[0]) && Number(object[coll].split('⁞')[1]) < Number(filcontent[1]);});}break;
+		//maior e igual e menor e igual que, somente numeros
+		case 5:{dbColl = dbColl.filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]) && Number(object[coll].split('⁞')[1]) <= Number(filcontent[1]);});}break;
+		//maior igual que
+		case 6:{dbColl = dbColl.filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]);});}break;
+		
+    }
+    
+    return dbColl;
 }
 //chamada de template 
 function callTemplateRow(gridID,templateID,listName,object) {
@@ -448,8 +466,8 @@ function addTemplateGrid(gridID){
 	
 	for (x = 0; x < GridDocHTML.length; x++) {
 		TempTagId = gRA(GridDocHTML[x],"id","");
-		for(var x = 0; x < globalTempTextHTML.length;x++){
-			if(globalTempTextHTML[x][0] !== TempTagId){
+		for(var y = 0; y < globalTempTextHTML.length;y++){
+			if(globalTempTextHTML[y][0] !== TempTagId){
 				globalTempTextHTML[globalTempTextHTML.length] = [TempTagId,GridDocHTML[x].innerHTML];
 			}		
 		}
