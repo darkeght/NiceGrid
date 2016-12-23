@@ -321,11 +321,44 @@ function filArr(dbColl,coll,ObjectValue,type) {
         //se contem informaçao
         case 1:{dbColl = dbColl.filter(function(object){return object[coll].split('⁞')[1].toString().toUpperCase().indexOf(ObjectValue.toString().toUpperCase()) >= 0;});}break;
         //igual a informação
-        case 2:{dbColl = dbColl.filter(function(object){return object[coll].split('⁞')[1].toString().toUpperCase() === ObjectValue.toString().toUpperCase();});}break;
+        case 2:{dbColl = dbColl.filter(function(object){
+			return object[coll].split('⁞')[1].toString().toUpperCase() === ObjectValue.toString().toUpperCase();});}break;
         //retorna todos novamente
         case 3:{dbColl = dbColl.filter(function(object){return true;});}break;
 		//maior que e menor que somente numericos
 		case 4:{dbColl = dbColl.filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) > Number(filcontent[0]) && Number(object[coll].split('⁞')[1]) < Number(filcontent[1]);});}break;
+		//maior e igual e menor e igual que, somente numeros
+		case 5:{dbColl = dbColl.filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]) && Number(object[coll].split('⁞')[1]) <= Number(filcontent[1]);});}break;
+		//maior igual que
+		case 6:{dbColl = dbColl.filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]);});}break;
+		
+    }
+    
+    return dbColl;
+}
+function filArrFast(dbColl,coll,nameColl,ObjectValue,type) {
+	
+    switch (type){
+        //se contem informaçao
+        case 1:{dbColl = dbColl.filter(function(object){return object[coll].split('⁞')[1].toString().toUpperCase().indexOf(ObjectValue.toString().toUpperCase()) >= 0;});}break;
+        //igual a informação
+        case 2:{
+			    var rightValueEqual = (nameColl + ObjectValue).toUpperCase();
+			    dbColl = dbColl.filter(function(object){
+										return object[coll].toUpperCase() === rightValueEqual;
+									   });
+			   }break;
+        //retorna todos novamente
+        case 3:{dbColl = dbColl.filter(function(object){return true;});}break;
+		//maior que e menor que somente numericos
+		case 4:{
+			    var rightFilter1 = Number(ObjectValue.split(',')[0]);
+				var rightFilter2 = Number(ObjectValue.split(',')[1]);
+				
+			    dbColl = dbColl.filter(function(object){
+										 var leftValueEqual = Number(object[coll].split('⁞')[1]);
+										 return result = leftValueEqual > rightFilter1 && leftValueEqual < rightFilter2});
+			   }break;
 		//maior e igual e menor e igual que, somente numeros
 		case 5:{dbColl = dbColl.filter(function(object){var filcontent = ObjectValue.split(',');return Number(object[coll].split('⁞')[1]) >= Number(filcontent[0]) && Number(object[coll].split('⁞')[1]) <= Number(filcontent[1]);});}break;
 		//maior igual que
