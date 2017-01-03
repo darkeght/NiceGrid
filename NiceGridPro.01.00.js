@@ -519,6 +519,7 @@ function addFilterGrid(gridId,listName){
 }
 //funcções nativas customizadas 
 function gRA(element, attribute, defaultValue) {
+        if(element === undefined){ return defaultValue; }
 	var retorno = element.getAttribute(attribute);
 	if (retorno === null) { return defaultValue; }
 	return retorno;
